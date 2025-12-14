@@ -41,46 +41,47 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBB3YB542tXXrfGIwUvFv7GFGvdJ7RA4OE',
-    appId: '1:491944466356:web:9a2247382bc3b9c7c484e1',
-    messagingSenderId: '491944466356',
-    projectId: 'child-tracker-91bcd',
-    authDomain: 'child-tracker-91bcd.firebaseapp.com',
-    storageBucket: 'child-tracker-91bcd.firebasestorage.app',
+    apiKey: 'apiKey',
+    appId: 'appId',
+    messagingSenderId: 'messageSenderid',
+    projectId: 'projectId',
+    authDomain: 'authDomain',
+    storageBucket: 'storageBucket',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDSPc4kHe64jgWtyo-uNBSEi8V1imNLjSk',
-    appId: '1:491944466356:android:30c1b905d780f03fc484e1',
-    messagingSenderId: '491944466356',
-    projectId: 'child-tracker-91bcd',
-    storageBucket: 'child-tracker-91bcd.firebasestorage.app',
+    apiKey: 'apiKey',
+    appId: 'appId',
+    messagingSenderId: 'messageSenderid',
+    projectId: 'projectId',
+    authDomain: 'authDomain',
+    storageBucket: 'storageBucket',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAPMEsX073TqUnLGYQwd1CSHzoODQCkUyU',
-    appId: '1:491944466356:ios:a5528d7871a171c9c484e1',
-    messagingSenderId: '491944466356',
-    projectId: 'child-tracker-91bcd',
-    storageBucket: 'child-tracker-91bcd.firebasestorage.app',
+    apiKey: 'apiKey',
+    appId: 'appId',
+    messagingSenderId: 'messageSenderid',
+    projectId: 'projectId',
+    storageBucket: 'storageBucket',
     iosBundleId: 'com.example.childTracker',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyAPMEsX073TqUnLGYQwd1CSHzoODQCkUyU',
-    appId: '1:491944466356:ios:a5528d7871a171c9c484e1',
-    messagingSenderId: '491944466356',
-    projectId: 'child-tracker-91bcd',
-    storageBucket: 'child-tracker-91bcd.firebasestorage.app',
+    apiKey: 'apiKey',
+    appId: 'appId',
+    messagingSenderId: 'messageSenderid',
+    projectId: 'projectId',
+    storageBucket: 'storageBucket',
     iosBundleId: 'com.example.childTracker',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyBB3YB542tXXrfGIwUvFv7GFGvdJ7RA4OE',
-    appId: '1:491944466356:web:fa8b86fd61854c73c484e1',
-    messagingSenderId: '491944466356',
-    projectId: 'child-tracker-91bcd',
-    authDomain: 'child-tracker-91bcd.firebaseapp.com',
+    apiKey: 'apiKey',
+    appId: 'appId',
+    messagingSenderId: 'messageSenderid',
+    projectId: 'projectId',
+    storageBucket: 'storageBucket',
     storageBucket: 'child-tracker-91bcd.firebasestorage.app',
   );
 }
