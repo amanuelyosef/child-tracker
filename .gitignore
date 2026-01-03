@@ -43,3 +43,29 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Sensitive / local config (do not commit)
+# Firebase generated config
+/lib/firebase_options.dart
+/android/app/google-services.json
+/ios/Runner/GoogleService-Info.plist
+
+# Local Gradle / keystore files
+/local.properties
+/android/key.properties
+/*.jks
+/**/*.jks
+/*.keystore
+/**/*.keystore
+
+# Android Manifest (if you keep local-only variants)
+/android/app/src/main/AndroidManifest.xml
+
+# Environment and secret files
+.env
+.env.*
+secrets.json
+
+# VS Code settings that may be local
+.vscode/
+

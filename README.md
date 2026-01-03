@@ -1,16 +1,79 @@
-# child_tracker
+# 🔍 Child Tracker App
 
-A new Flutter project.
+A Flutter app for real-time location tracking of children with parent monitoring capabilities.
 
-## Getting Started
+## ✨ Features
 
-This project is a starting point for a Flutter application.
+- 📍 **Real-time Location Tracking** - Track child location with live updates
+- 🗺️ **Interactive Maps** - View location on Google Maps with safe radius
+- 📊 **Speed Monitoring** - See child's movement speed in km/h
+- 📜 **Location History** - View past locations with timestamps
+- ⚠️ **Safety Alerts** - Get alerts when child leaves safe zone
+- 🎨 **Modern UI** - Material Design 3 interface
 
-A few resources to get you started if this is your first Flutter project:
+## 🚀 Quick Start
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### 1. Setup Firebase
+```bash
+# Install FlutterFire CLI
+dart pub global activate flutterfire_cli
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+# Configure Firebase
+flutterfire configure
+```
+
+### 2. Add Google Maps API Keys
+- Android: Add to `android/app/src/main/AndroidManifest.xml`
+- iOS: Add to `ios/Runner/Info.plist`
+
+### 3. Run the App
+```bash
+flutter pub get
+flutter run --release
+```
+
+## 📱 How to Use
+
+### Child Mode
+1. Select "Child (Broadcaster)"
+2. Share the 6-digit code with parent
+3. Tap "Start Sharing"
+4. Grant "Allow all the time" location permission
+
+### Parent Mode
+1. Select "Parent (Monitor)"
+2. Enter child's code
+3. Tap "Connect & Monitor"
+4. View real-time distance and location
+
+## 📖 Documentation
+
+- [QUICKSTART.md](QUICKSTART.md) - Fast setup guide
+- [SETUP_GUIDE.md](SETUP_GUIDE.md) - Detailed setup instructions
+- [DOCS_INDEX.md](DOCS_INDEX.md) - All documentation
+
+## 🛠️ Built With
+
+- Flutter
+- Firebase (Firestore)
+- Google Maps
+- Geolocator
+
+## 📋 Requirements
+
+- Flutter SDK 3.9.2+
+- Android 9+ (API 28)
+- iOS 13+
+- Firebase account
+- Google Cloud account (for Maps API)
+
+## 🔒 Permissions Required
+
+- Fine location access
+- Background location access (Android)
+- Notification permission
+- Internet access
+
+---
+
+**Version**: 2.0.0 | **Status**: ✅ Production Ready
