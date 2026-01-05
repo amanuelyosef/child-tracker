@@ -1,7 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
+enum UserRole { parent, child }
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Get current user
   User? get currentUser => _auth.currentUser;
@@ -32,6 +36,7 @@ class AuthService {
     required String email,
     required String password,
     String? displayName,
+    UserRole role = UserRole.parent,
   }) async {
     try {
       final credential = await _auth.createUserWithEmailAndPassword(
@@ -43,6 +48,16 @@ class AuthService {
       if (displayName != null && displayName.isNotEmpty) {
         await credential.user?.updateDisplayName(displayName);
       }
+
+      // Store user role in Firestore
+      if (credential.user != null) {
+        await _firestore.collection('users').doc(credential.user!.uid).set({
+          'email': email.trim(),
+          'displayName': displayName ?? '',
+          'role': role == UserRole.parent ? 'parent' : 'child',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
       
       return AuthResult.success();
     } on FirebaseAuthException catch (e) {
@@ -50,6 +65,27 @@ class AuthService {
     } catch (e) {
       return AuthResult.failure('An unexpected error occurred. Please try again.');
     }
+  }
+
+  // Get user role from Firestore
+  Future<UserRole?> getUserRole(String uid) async {
+    try {
+      final doc = await _firestore.collection('users').doc(uid).get();
+      if (doc.exists) {
+        final role = doc.data()?['role'] as String?;
+        return role == 'child' ? UserRole.child : UserRole.parent;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Update user role
+  Future<void> updateUserRole(String uid, UserRole role) async {
+    await _firestore.collection('users').doc(uid).update({
+      'role': role == UserRole.parent ? 'parent' : 'child',
+    });
   }
 
   // Sign out

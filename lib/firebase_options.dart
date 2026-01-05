@@ -81,7 +81,6 @@ class DefaultFirebaseOptions {
     appId: 'appId',
     messagingSenderId: 'messageSenderid',
     projectId: 'projectId',
-    storageBucket: 'storageBucket',
     storageBucket: 'child-tracker-91bcd.firebasestorage.app',
   );
 }
