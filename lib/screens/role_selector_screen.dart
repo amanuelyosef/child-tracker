@@ -1,16 +1,88 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../services/auth_service.dart';
 import '../widgets/common_widgets.dart';
 import '../widgets/logout_dialog.dart';
 import 'child_mode_screen.dart';
 import 'parent_mode_screen.dart';
 
 /// Role selector screen for choosing between child and parent modes
-class RoleSelectorScreen extends StatelessWidget {
+class RoleSelectorScreen extends StatefulWidget {
   const RoleSelectorScreen({super.key});
 
   @override
+  State<RoleSelectorScreen> createState() => _RoleSelectorScreenState();
+}
+
+class _RoleSelectorScreenState extends State<RoleSelectorScreen> {
+  final _authService = AuthService();
+  bool _isChecking = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _resolveAndRedirect();
+  }
+
+  Future<void> _resolveAndRedirect() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      setState(() => _isChecking = false);
+      return;
+    }
+
+    final role = await _authService.getUserRole(user.uid);
+    if (!mounted) return;
+
+    if (role == UserRole.parent) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const ParentModeScreen()),
+        (route) => false,
+      );
+      return;
+    }
+
+    if (role == UserRole.child) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const ChildModeScreen()),
+        (route) => false,
+      );
+      return;
+    }
+
+    setState(() => _isChecking = false);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isChecking) {
+      return Scaffold(
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.blue.shade50,
+                Colors.white,
+                Colors.teal.shade50,
+              ],
+            ),
+          ),
+          child: const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 12),
+                Text('Preparing your experience...'),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
     final headline = Theme.of(context).textTheme.headlineSmall?.copyWith(
           fontWeight: FontWeight.bold,
           color: Colors.blueGrey.shade900,
