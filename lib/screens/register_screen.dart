@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import '../services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -39,21 +41,97 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _errorMessage = null;
     });
 
+    debugPrint('RegisterScreen: Starting registration...');
     final result = await _authService.registerWithEmailAndPassword(
       email: _emailController.text,
       password: _passwordController.text,
       displayName: _nameController.text.trim(),
       role: _selectedRole,
     );
+    debugPrint('RegisterScreen: Registration result - isSuccess: ${result.isSuccess}, error: ${result.errorMessage}');
 
     if (!mounted) return;
 
     setState(() => _isLoading = false);
 
     if (!result.isSuccess) {
+      debugPrint('RegisterScreen: Showing error: ${result.errorMessage}');
       setState(() => _errorMessage = result.errorMessage);
+    } else if (_selectedRole == UserRole.child && result.pairCode != null) {
+      debugPrint('RegisterScreen: Showing pair code dialog');
+      // Show pair code dialog for child registration
+      await _showPairCodeDialog(result.pairCode!);
     }
     // If successful, the auth state listener in main.dart will handle navigation
+  }
+
+  Future<void> _showPairCodeDialog(String pairCode) async {
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.green.shade600, size: 28),
+            const SizedBox(width: 12),
+            const Text('Registration Complete!'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Your permanent pair code is:',
+              style: TextStyle(color: Colors.grey.shade700),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue.shade200),
+              ),
+              child: SelectableText(
+                pairCode,
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 4,
+                  color: Colors.blue.shade800,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Share this code with your parent so they can track your location. This code will not change.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Colors.grey.shade600,
+              ),
+            ),
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: () {
+                Clipboard.setData(ClipboardData(text: pairCode));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Code copied to clipboard')),
+                );
+              },
+              icon: const Icon(Icons.copy),
+              label: const Text('Copy Code'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Got it'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
