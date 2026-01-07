@@ -45,8 +45,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (!result.isSuccess) {
       setState(() => _errorMessage = result.errorMessage);
+    } else {
+      // Login successful: return to root so AuthWrapper can route
+      if (mounted) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      }
     }
-    // If successful, the auth state listener in main.dart will handle navigation
+    // Returning to the root allows AuthWrapper to navigate based on auth state
   }
 
   Future<void> _handleForgotPassword() async {

@@ -61,8 +61,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
       debugPrint('RegisterScreen: Showing pair code dialog');
       // Show pair code dialog for child registration
       await _showPairCodeDialog(result.pairCode!);
+      // After acknowledging the dialog, return to the root so AuthWrapper can route
+      if (mounted) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      }
+    } else {
+      // Registration successful for parent (no dialog): return to root
+      if (mounted) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      }
     }
-    // If successful, the auth state listener in main.dart will handle navigation
+    // Returning to the root allows AuthWrapper to navigate based on auth state
   }
 
   Future<void> _showPairCodeDialog(String pairCode) async {
