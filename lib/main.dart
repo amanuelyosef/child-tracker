@@ -8,7 +8,6 @@ import 'firebase_options.dart';
 import 'screens/child_mode_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/parent_mode_screen.dart';
-import 'screens/role_selector_screen.dart';
 import 'services/auth_service.dart';
 import 'services/background_service.dart';
 
@@ -91,6 +90,7 @@ class _RoleBasedNavigatorState extends State<RoleBasedNavigator> {
   final AuthService _authService = AuthService();
   UserRole? _userRole;
   bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -100,14 +100,49 @@ class _RoleBasedNavigatorState extends State<RoleBasedNavigator> {
 
   Future<void> _loadUserRole() async {
     debugPrint('RoleBasedNavigator: Loading user role for UID: ${widget.user.uid}');
-    final role = await _authService.getUserRole(widget.user.uid);
-    debugPrint('RoleBasedNavigator: Got role: $role');
-    if (mounted) {
-      setState(() {
-        _userRole = role;
-        _isLoading = false;
-      });
+    try {
+      // Try to get the role, with retries for newly registered users
+      UserRole? role;
+      int attempts = 0;
+      const maxAttempts = 3;
+      
+      while (role == null && attempts < maxAttempts) {
+        role = await _authService.getUserRole(widget.user.uid);
+        if (role == null && attempts < maxAttempts - 1) {
+          debugPrint('RoleBasedNavigator: Role not found, retrying in 1 second... (attempt ${attempts + 1})');
+          await Future.delayed(const Duration(seconds: 1));
+        }
+        attempts++;
+      }
+      
+      debugPrint('RoleBasedNavigator: Got role: $role after $attempts attempts');
+      if (mounted) {
+        if (role == null) {
+          // No role found after retries - user data is incomplete
+          setState(() {
+            _errorMessage = 'Account setup incomplete. Please sign up again.';
+            _isLoading = false;
+          });
+        } else {
+          setState(() {
+            _userRole = role;
+            _isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('RoleBasedNavigator: Error loading role: $e');
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Failed to load profile. Please try again.';
+          _isLoading = false;
+        });
+      }
     }
+  }
+
+  Future<void> _signOutAndRetry() async {
+    await _authService.signOut();
   }
 
   @override
@@ -140,9 +175,61 @@ class _RoleBasedNavigatorState extends State<RoleBasedNavigator> {
       );
     }
 
-    // If no role found (old user or error), show role selector
-    if (_userRole == null) {
-      return const RoleSelectorScreen();
+    // If error occurred, show error screen with sign out option
+    if (_errorMessage != null) {
+      return Scaffold(
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.blue.shade50,
+                Colors.white,
+                Colors.teal.shade50,
+              ],
+            ),
+          ),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Colors.red.shade400,
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    _errorMessage!,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  ElevatedButton.icon(
+                    onPressed: _signOutAndRetry,
+                    icon: const Icon(Icons.logout),
+                    label: const Text('Sign Out & Try Again'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue.shade600,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
     }
 
     // Navigate based on role

@@ -10,7 +10,6 @@ import '../services/auth_service.dart';
 import '../services/location_service.dart';
 import '../services/user_service.dart';
 import '../widgets/common_widgets.dart';
-import '../widgets/logout_dialog.dart';
 import 'edit_profile_screen.dart';
 import 'manage_children_screen.dart';
 import 'map_view_screen.dart';
@@ -189,15 +188,18 @@ class _ParentModeScreenState extends State<ParentModeScreen> {
         backgroundColor: Colors.teal.shade700,
         automaticallyImplyLeading: false,
         actions: [
-          IconButton(icon: const Icon(Icons.person, color: Colors.white), onPressed: _parentUser == null ? null : () async {
-            final result = await Navigator.of(context).push<bool>(MaterialPageRoute(builder: (_) => EditProfileScreen(user: _parentUser!)));
-            if (result == true) _loadData();
-          }, tooltip: 'Edit Profile'),
-          IconButton(icon: const Icon(Icons.group, color: Colors.white), onPressed: () async {
-            await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ManageChildrenScreen()));
-            _loadData();
-          }, tooltip: 'Manage Children'),
-          const LogoutButton(),
+          IconButton(
+            icon: const Icon(Icons.person, color: Colors.white),
+            onPressed: _parentUser == null
+                ? null
+                : () async {
+                    final result = await Navigator.of(context).push<bool>(
+                      MaterialPageRoute(builder: (_) => EditProfileScreen(user: _parentUser!)),
+                    );
+                    if (result == true) _loadData();
+                  },
+            tooltip: 'Profile',
+          ),
         ],
       ),
       body: Container(
@@ -211,6 +213,25 @@ class _ParentModeScreenState extends State<ParentModeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 StatusBanner(title: 'Welcome, ' + (_parentUser?.displayName ?? 'Parent'), subtitle: _children.isEmpty ? 'Add children to start tracking' : _children.length.toString() + ' child' + (_children.length == 1 ? '' : 'ren') + ' connected', icon: Icons.shield, gradientColors: [Colors.teal.shade600, Colors.blue.shade500], isActive: isTracking, activeLabel: 'Tracking', inactiveLabel: 'Idle'),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      await Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const ManageChildrenScreen()),
+                      );
+                      _loadData();
+                    },
+                    icon: const Icon(Icons.person_add),
+                    label: const Text('Manage / Add Children'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.teal.shade600,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 16),
                 if (_children.isEmpty)
                   GlassCard(child: Column(children: [
