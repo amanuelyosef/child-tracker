@@ -5,5 +5,7 @@ export 'location_history_screen.dart';
 export 'login_screen.dart';
 export 'manage_children_screen.dart';
 export 'map_view_screen.dart';
+export 'message_parent_screen.dart';
+export 'parent_messages_screen.dart';
 export 'parent_mode_screen.dart';
 export 'register_screen.dart';

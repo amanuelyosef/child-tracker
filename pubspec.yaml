@@ -33,6 +33,7 @@ dependencies:
 
   # Core packages for tracking experience
   geolocator: ^10.1.0
+  geocoding: ^3.0.0
   firebase_core: ^2.15.1
   firebase_auth: ^4.10.0
   cloud_firestore: ^4.9.1

@@ -237,7 +237,7 @@ class _ManageChildrenScreenState extends State<ManageChildrenScreen> {
                                     color: Colors.white,
                                   ),
                                 )
-                              : const Icon(Icons.add),
+                              : const Icon(Icons.add, color: Colors.white,),
                         ),
                       ],
                     ),

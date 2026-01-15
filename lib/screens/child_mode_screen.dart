@@ -12,8 +12,8 @@ import '../services/location_service.dart';
 import '../services/user_service.dart';
 import '../utils/date_formatters.dart';
 import '../widgets/common_widgets.dart';
-import '../widgets/logout_dialog.dart';
 import 'edit_profile_screen.dart';
+import 'message_parent_screen.dart';
 
 class ChildModeScreen extends StatefulWidget {
   const ChildModeScreen({super.key});
@@ -142,16 +142,16 @@ class _ChildModeScreenState extends State<ChildModeScreen> {
             final result = await Navigator.of(context).push<bool>(MaterialPageRoute(builder: (_) => EditProfileScreen(user: _childUser!)));
             if (result == true) _loadData();
           }, tooltip: 'Edit Profile'),
-          const LogoutButton(),
         ],
       ),
-      body: Container(
-        decoration: BoxDecoration(gradient: LinearGradient(colors: [Colors.blue.shade50, Colors.white], begin: Alignment.topCenter, end: Alignment.bottomCenter)),
-        child: RefreshIndicator(
-          onRefresh: _loadData,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16),
+      body: SafeArea(
+        child: Container(
+          decoration: BoxDecoration(gradient: LinearGradient(colors: [Colors.blue.shade50, Colors.white], begin: Alignment.topCenter, end: Alignment.bottomCenter)),
+          child: RefreshIndicator(
+            onRefresh: _loadData,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -164,7 +164,7 @@ class _ChildModeScreenState extends State<ChildModeScreen> {
                   const SizedBox(height: 8),
                   Text('Give this code to your parent to connect', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600)),
                   const SizedBox(height: 12),
-                  ElevatedButton.icon(onPressed: _copyPairCode, icon: const Icon(Icons.copy), label: const Text('Copy Code'), style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade600)),
+                  ElevatedButton.icon(onPressed: _copyPairCode, icon: const Icon(Icons.copy), label: const Text('Copy Code'), style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade600, foregroundColor: Colors.white)),
                 ])),
                 const SizedBox(height: 16),
                 if (_parentUser != null) GlassCard(color: Colors.purple.shade50, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -178,6 +178,28 @@ class _ChildModeScreenState extends State<ChildModeScreen> {
                       Text(_parentUser!.email, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600)),
                     ])),
                   ]),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).push(MaterialPageRoute(
+                          builder: (_) => MessageParentScreen(
+                            childUser: _childUser!,
+                            parentUser: _parentUser!,
+                          ),
+                        ));
+                      },
+                      icon: const Icon(Icons.message),
+                      label: const Text('Message Parent'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.purple.shade600,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ),
                 ])),
                 const SizedBox(height: 16),
                 GlassCard(child: Column(children: [
@@ -235,6 +257,7 @@ class _ChildModeScreenState extends State<ChildModeScreen> {
               ],
             ),
           ),
+        ),
         ),
       ),
     );

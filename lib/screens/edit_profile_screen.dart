@@ -335,7 +335,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           )
-                        : const Text('Save Changes'),
+                        : const Text('Save Changes', style: TextStyle(color: Colors.white)),
                     onPressed: _isLoading ? null : _saveProfile,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: isChild ? Colors.blue.shade700 : Colors.teal.shade700,

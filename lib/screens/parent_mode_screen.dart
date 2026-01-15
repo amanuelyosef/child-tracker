@@ -1,5 +1,6 @@
 ﻿import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -8,12 +9,14 @@ import '../config/app_constants.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
 import '../services/location_service.dart';
+import '../services/message_service.dart';
 import '../services/user_service.dart';
 import '../widgets/common_widgets.dart';
 import 'edit_profile_screen.dart';
 import 'manage_children_screen.dart';
 import 'map_view_screen.dart';
 import 'location_history_screen.dart';
+import 'parent_messages_screen.dart';
 
 class ParentModeScreen extends StatefulWidget {
   const ParentModeScreen({super.key});
@@ -26,6 +29,7 @@ class _ParentModeScreenState extends State<ParentModeScreen> {
   final _authService = AuthService();
   final _userService = UserService();
   final _locationService = LocationService();
+  final _messageService = MessageService();
 
   ParentUser? _parentUser;
   List<ChildUser> _children = [];
@@ -115,6 +119,17 @@ class _ParentModeScreenState extends State<ParentModeScreen> {
       final childLat = (data['latitude'] as num?)?.toDouble();
       final childLng = (data['longitude'] as num?)?.toDouble();
       if (childLat == null || childLng == null) return;
+      
+      // Validate coordinates
+      if (childLat == 0 && childLng == 0) {
+        debugPrint('Invalid child coordinates received: 0,0');
+        return;
+      }
+      if (childLat < -90 || childLat > 90 || childLng < -180 || childLng > 180) {
+        debugPrint('Invalid child coordinates: $childLat, $childLng');
+        return;
+      }
+      
       final newChildLatLng = LatLng(childLat, childLng);
       if (_lastChildLatLng != null && _lastChildUpdate != null) {
         final distance = _locationService.calculateDistance(
@@ -145,12 +160,30 @@ class _ParentModeScreenState extends State<ParentModeScreen> {
 
   void _updateDistance(Position parentPos) {
     if (_childLatLng == null) return;
+    
+    // Validate coordinates to avoid invalid distance calculations
+    if (parentPos.latitude == 0 && parentPos.longitude == 0) {
+      debugPrint('Invalid parent position: 0,0');
+      return;
+    }
+    if (_childLatLng!.latitude == 0 && _childLatLng!.longitude == 0) {
+      debugPrint('Invalid child position: 0,0');
+      return;
+    }
+    
     final distance = _locationService.calculateDistance(
       startLat: parentPos.latitude,
       startLng: parentPos.longitude,
       endLat: _childLatLng!.latitude,
       endLng: _childLatLng!.longitude,
     );
+    
+    // Sanity check - if distance is unreasonably large, don't update
+    if (distance > 50000000) { // More than half Earth's circumference
+      debugPrint('Invalid distance calculated: $distance meters');
+      return;
+    }
+    
     setState(() {
       _latestDistance = distance;
       _parentPosition = parentPos;
@@ -188,6 +221,46 @@ class _ParentModeScreenState extends State<ParentModeScreen> {
         backgroundColor: Colors.teal.shade700,
         automaticallyImplyLeading: false,
         actions: [
+          if (_parentUser != null)
+            StreamBuilder<int>(
+              stream: _messageService.getUnreadMessageCount(_parentUser!.uid),
+              builder: (context, snapshot) {
+                final count = snapshot.data ?? 0;
+                return Stack(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.message, color: Colors.white),
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => ParentMessagesScreen(parentId: _parentUser!.uid),
+                          ),
+                        );
+                      },
+                      tooltip: 'Messages',
+                    ),
+                    if (count > 0)
+                      Positioned(
+                        right: 6,
+                        top: 6,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                          child: Text(
+                            count > 9 ? '9+' : count.toString(),
+                            style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
           IconButton(
             icon: const Icon(Icons.person, color: Colors.white),
             onPressed: _parentUser == null
@@ -202,13 +275,14 @@ class _ParentModeScreenState extends State<ParentModeScreen> {
           ),
         ],
       ),
-      body: Container(
-        decoration: BoxDecoration(gradient: LinearGradient(colors: [Colors.teal.shade50, Colors.white], begin: Alignment.topCenter, end: Alignment.bottomCenter)),
-        child: RefreshIndicator(
-          onRefresh: _loadData,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16),
+      body: SafeArea(
+        child: Container(
+          decoration: BoxDecoration(gradient: LinearGradient(colors: [Colors.teal.shade50, Colors.white], begin: Alignment.topCenter, end: Alignment.bottomCenter)),
+          child: RefreshIndicator(
+            onRefresh: _loadData,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -227,6 +301,7 @@ class _ParentModeScreenState extends State<ParentModeScreen> {
                     label: const Text('Manage / Add Children'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.teal.shade600,
+                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
@@ -241,7 +316,7 @@ class _ParentModeScreenState extends State<ParentModeScreen> {
                     const SizedBox(height: 8),
                     Text('Add your child pair code to start tracking', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600), textAlign: TextAlign.center),
                     const SizedBox(height: 16),
-                    ElevatedButton.icon(onPressed: () async { await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ManageChildrenScreen())); _loadData(); }, icon: const Icon(Icons.person_add), label: const Text('Add a Child'), style: ElevatedButton.styleFrom(backgroundColor: Colors.teal.shade600, padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12))),
+                    ElevatedButton.icon(onPressed: () async { await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ManageChildrenScreen())); _loadData(); }, icon: const Icon(Icons.person_add), label: const Text('Add a Child'), style: ElevatedButton.styleFrom(backgroundColor: Colors.teal.shade600, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12))),
                   ]))
                 else
                   GlassCard(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -275,15 +350,16 @@ class _ParentModeScreenState extends State<ParentModeScreen> {
                     Slider(min: AppConstants.minSafeRadius, max: AppConstants.maxSafeRadius, divisions: 19, value: _radiusMeters, onChanged: (value) => setState(() => _radiusMeters = value), activeColor: Colors.teal),
                   ])),
                   const SizedBox(height: 14),
-                  if (_childLatLng != null) SizedBox(width: double.infinity, child: ElevatedButton.icon(onPressed: () { Navigator.of(context).push(MaterialPageRoute(builder: (_) => MapViewScreen(childPosition: _childLatLng!, parentPosition: _parentPosition == null ? null : LatLng(_parentPosition!.latitude, _parentPosition!.longitude), radiusMeters: _radiusMeters, pairCode: _selectedChild!.pairCode))); }, icon: const Icon(Icons.map_outlined), label: const Text('View on Map'), style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12), backgroundColor: Colors.purple))),
+                  if (_childLatLng != null) SizedBox(width: double.infinity, child: ElevatedButton.icon(onPressed: () { Navigator.of(context).push(MaterialPageRoute(builder: (_) => MapViewScreen(childPosition: _childLatLng!, parentPosition: _parentPosition == null ? null : LatLng(_parentPosition!.latitude, _parentPosition!.longitude), radiusMeters: _radiusMeters, pairCode: _selectedChild!.pairCode))); }, icon: const Icon(Icons.map_outlined), label: const Text('View on Map'), style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12), backgroundColor: Colors.purple, foregroundColor: Colors.white))),
                   const SizedBox(height: 10),
-                  SizedBox(width: double.infinity, child: ElevatedButton.icon(onPressed: () { Navigator.of(context).push(MaterialPageRoute(builder: (_) => LocationHistoryScreen(pairCode: _selectedChild!.pairCode))); }, icon: const Icon(Icons.history), label: const Text('View Location History'), style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12), backgroundColor: Colors.blue.shade600))),
+                  SizedBox(width: double.infinity, child: ElevatedButton.icon(onPressed: () { Navigator.of(context).push(MaterialPageRoute(builder: (_) => LocationHistoryScreen(pairCode: _selectedChild!.pairCode))); }, icon: const Icon(Icons.history), label: const Text('View Location History'), style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12), backgroundColor: Colors.blue.shade600, foregroundColor: Colors.white))),
                   const SizedBox(height: 10),
                   SizedBox(width: double.infinity, child: OutlinedButton.icon(onPressed: _stopTracking, icon: const Icon(Icons.stop), label: const Text('Stop Tracking'), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12), foregroundColor: Colors.red, side: const BorderSide(color: Colors.red)))),
                 ],
               ],
             ),
           ),
+        ),
         ),
       ),
     );

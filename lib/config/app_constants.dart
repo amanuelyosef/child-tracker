@@ -7,7 +7,8 @@ class AppConstants {
   static const String appTagline = 'Stay close. Stay safe.';
 
   // Location settings
-  static const int locationDistanceFilter = 10; // meters
+  static const int locationDistanceFilter = 10; // meters - for real-time tracking
+  static const int historyDistanceFilter = 50; // meters - for saving to history
   static const int parentLocationDistanceFilter = 5; // meters
   static const double defaultSafeRadius = 100; // meters
   static const double minSafeRadius = 25; // meters
